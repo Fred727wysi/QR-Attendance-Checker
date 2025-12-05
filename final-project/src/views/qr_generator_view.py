@@ -10,10 +10,17 @@ import base64
 from datetime import datetime
 from views.base_view import BaseView
 from config.constants import PRIMARY_COLOR, YELLOW_50
+from database.db_manager import Database
 
 
 class QRGeneratorView(BaseView):
     """QR code generator from CSV file."""
+    
+    def __init__(self, app):
+        """Initialize with access to the app and database."""
+        super().__init__(app)
+        self.db = app.db
+        self.qr_codes_data = []
     
     def build(self):
         """Build and return the QR generator view."""
@@ -22,6 +29,7 @@ class QRGeneratorView(BaseView):
             
             # UI Components
             file_picker = ft.FilePicker()
+            folder_picker = ft.FilePicker()
             selected_file_name = ft.Text(
                 "No file selected",
                 size=12,
@@ -40,6 +48,9 @@ class QRGeneratorView(BaseView):
                 color=ft.Colors.GREY_700,
                 weight=ft.FontWeight.BOLD
             )
+            
+            # Store student data for database insertion
+            students_data = []
             
             def handle_file_pick(e):
                 """Handle file selection."""
@@ -62,6 +73,8 @@ class QRGeneratorView(BaseView):
                         
                         # Clear previous QR codes
                         qr_output.controls.clear()
+                        self.qr_codes_data.clear()
+                        students_data.clear()
                         
                         valid_count = 0
                         
@@ -96,6 +109,15 @@ class QRGeneratorView(BaseView):
                             img.save(buffer, format='PNG')
                             img_base64 = base64.b64encode(buffer.getvalue()).decode()
                             
+                            # Store QR code data and student info
+                            self.qr_codes_data.append((qr_data, img_base64))
+                            students_data.append({
+                                "school_id": school_id,
+                                "name": student_name,
+                                "qr_data": qr_data,
+                                "row_data": row
+                            })
+                            
                             # Create card for each QR code
                             qr_card = ft.Card(
                                 content=ft.Container(
@@ -123,7 +145,7 @@ class QRGeneratorView(BaseView):
                                                 icon=ft.Icons.DOWNLOAD,
                                                 width=180,
                                                 on_click=lambda e, data=qr_data, b64=img_base64: 
-                                                    download_qr(data, b64),
+                                                    download_single_qr(data, b64),
                                                 style=ft.ButtonStyle(
                                                     bgcolor=PRIMARY_COLOR,
                                                     color=ft.Colors.BLACK
@@ -157,28 +179,182 @@ class QRGeneratorView(BaseView):
                     
                     status_text.update()
             
-            def download_qr(qr_data: str, img_base64: str):
-                """Handle QR code download by saving to Downloads folder."""
-                try:
-                    # Create qr_codes directory if it doesn't exist
-                    qr_dir = os.path.expanduser("~/Downloads/QR_Codes")
-                    os.makedirs(qr_dir, exist_ok=True)
-                    
-                    # Generate filename from QR data and timestamp
-                    safe_name = "".join(c if c.isalnum() or c in ('-', '_') else '_' for c in qr_data)
-                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                    filename = f"QR_{safe_name}_{timestamp}.png"
-                    file_path = os.path.join(qr_dir, filename)
-                    
-                    # Decode base64 and save image
-                    img_data = base64.b64decode(img_base64)
-                    with open(file_path, 'wb') as f:
-                        f.write(img_data)
-                    
-                    self.show_snackbar(f"QR code saved to Downloads/QR_Codes/{filename}", ft.Colors.GREEN)
-                except Exception as ex:
-                    self.show_snackbar(f"Download error: {str(ex)}", ft.Colors.RED)
+            def download_single_qr(qr_data: str, img_base64: str):
+                """Handle single QR code download with folder selection."""
+                # Create a callback for folder selection
+                def on_folder_selected(e):
+                    if e.path:
+                        try:
+                            qr_dir = e.path
+                            os.makedirs(qr_dir, exist_ok=True)
+                            
+                            # Generate filename from QR data and timestamp
+                            safe_name = "".join(c if c.isalnum() or c in ('-', '_') else '_' for c in qr_data)
+                            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                            filename = f"QR_{safe_name}_{timestamp}.png"
+                            file_path = os.path.join(qr_dir, filename)
+                            
+                            # Decode base64 and save image
+                            img_data = base64.b64decode(img_base64)
+                            with open(file_path, 'wb') as f:
+                                f.write(img_data)
+                            
+                            self.show_snackbar(f"QR code saved: {filename}", ft.Colors.GREEN)
+                        except Exception as ex:
+                            self.show_snackbar(f"Download error: {str(ex)}", ft.Colors.RED)
+                
+                # Set the callback and open folder picker
+                folder_picker.on_result = on_folder_selected
+                folder_picker.get_directory_path("Select folder to save QR code")
             
+            def download_all_qrs(e):
+                """Download all generated QR codes after user selects a folder."""
+                if not self.qr_codes_data:
+                    self.show_snackbar("No QR codes to download", ft.Colors.ORANGE)
+                    return
+                
+                def on_folder_selected(e):
+                    if e.path:
+                        try:
+                            qr_dir = e.path
+                            os.makedirs(qr_dir, exist_ok=True)
+                            
+                            count = 0
+                            base_timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                            for idx, (qr_data, img_base64) in enumerate(self.qr_codes_data, 1):
+                                safe_name = "".join(c if c.isalnum() or c in ('-', '_') else '_' for c in qr_data)
+                                filename = f"QR_{safe_name}_{base_timestamp}_{idx:03d}.png"
+                                file_path = os.path.join(qr_dir, filename)
+                                
+                                img_data = base64.b64decode(img_base64)
+                                with open(file_path, 'wb') as f:
+                                    f.write(img_data)
+                                count += 1
+                            
+                            self.show_snackbar(f"Downloaded {count} QR code(s) successfully!", ft.Colors.GREEN)
+                        except Exception as ex:
+                            self.show_snackbar(f"Download error: {str(ex)}", ft.Colors.RED)
+                
+                # Set the callback and open folder picker
+                folder_picker.on_result = on_folder_selected
+                folder_picker.get_directory_path(f"Select folder to save {len(self.qr_codes_data)} QR code(s)")
+            
+            def save_students_to_db(e):
+                """Save all students to database with their QR codes after confirmation."""
+                if not students_data:
+                    self.show_snackbar("No students to save", ft.Colors.ORANGE)
+                    return
+                
+                print(f"DEBUG: Save button clicked, students_data has {len(students_data)} students")
+                
+                def confirm_save(e):
+                    print("DEBUG: Confirm save clicked")
+                    try:
+                        # Close dialog first
+                        self.page.close(dlg)
+                        
+                        # Add students_qrcodes table if it doesn't exist
+                        self.db._execute("""
+                        CREATE TABLE IF NOT EXISTS students_qrcodes (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            school_id TEXT NOT NULL UNIQUE,
+                            name TEXT NOT NULL,
+                            qr_data TEXT NOT NULL UNIQUE,
+                            qr_data_encoded TEXT NOT NULL,
+                            csv_data TEXT,
+                            created_at TEXT NOT NULL,
+                            FOREIGN KEY (school_id) REFERENCES attendance(user_id)
+                        )
+                        """)
+                        
+                        saved_count = 0
+                        failed_count = 0
+                        
+                        for student in students_data:
+                            try:
+                                # Check if student already exists
+                                check_query = "SELECT id FROM students_qrcodes WHERE school_id = ?"
+                                existing = self.db._execute(check_query, (student['school_id'],), fetch_one=True)
+                                
+                                if existing:
+                                    # Update existing student
+                                    update_query = """
+                                    UPDATE students_qrcodes 
+                                    SET name = ?, qr_data = ?, qr_data_encoded = ?, csv_data = ?
+                                    WHERE school_id = ?
+                                    """
+                                    self.db._execute(update_query, (
+                                        student['name'],
+                                        student['qr_data'],
+                                        # Find the base64 encoded version
+                                        next(b64 for data, b64 in self.qr_codes_data if data == student['qr_data']),
+                                        str(student['row_data']),
+                                        student['school_id']
+                                    ))
+                                else:
+                                    # Insert new student
+                                    insert_query = """
+                                    INSERT INTO students_qrcodes 
+                                    (school_id, name, qr_data, qr_data_encoded, csv_data, created_at)
+                                    VALUES (?, ?, ?, ?, ?, ?)
+                                    """
+                                    self.db._execute(insert_query, (
+                                        student['school_id'],
+                                        student['name'],
+                                        student['qr_data'],
+                                        # Find the base64 encoded version
+                                        next(b64 for data, b64 in self.qr_codes_data if data == student['qr_data']),
+                                        str(student['row_data']),
+                                        datetime.now().isoformat()
+                                    ))
+                                saved_count += 1
+                            except Exception as ex:
+                                print(f"Error saving student {student.get('school_id')}: {ex}")
+                                failed_count += 1
+                        
+                        message = f"Saved {saved_count} student(s) to database"
+                        if failed_count > 0:
+                            message += f" ({failed_count} failed)"
+                        self.show_snackbar(message, ft.Colors.GREEN)
+                        print(f"DEBUG: {message}")
+                        
+                    except Exception as ex:
+                        print(f"DEBUG: Database error: {str(ex)}")
+                        import traceback
+                        traceback.print_exc()
+                        self.show_snackbar(f"Database error: {str(ex)}", ft.Colors.RED)
+                
+                def cancel_save(e):
+                    print("DEBUG: Cancel save clicked")
+                    self.page.close(dlg)
+                
+                # Create dialog
+                dlg = ft.AlertDialog(
+                    modal=True,
+                    title=ft.Text("Save Students to Database?", weight=ft.FontWeight.BOLD),
+                    content=ft.Text(
+                        f"This will save {len(students_data)} student(s) with their QR codes to the database.\n\n"
+                        f"Existing students will be updated.",
+                        size=14
+                    ),
+                    actions=[
+                        ft.TextButton("Cancel", on_click=cancel_save),
+                        ft.ElevatedButton(
+                            "Save to Database", 
+                            on_click=confirm_save, 
+                            style=ft.ButtonStyle(
+                                bgcolor=ft.Colors.BLUE,
+                                color=ft.Colors.WHITE
+                            )
+                        ),
+                    ],
+                    actions_alignment=ft.MainAxisAlignment.END,
+                )
+                
+                # Open dialog using page.open() instead of setting page.dialog
+                self.page.open(dlg)
+                print("DEBUG: Dialog opened using page.open()")
+                            
             def pick_csv_file(e):
                 """Trigger file picker."""
                 file_picker.pick_files(
@@ -188,6 +364,7 @@ class QRGeneratorView(BaseView):
             
             # Add file picker to page overlay
             self.page.overlay.append(file_picker)
+            self.page.overlay.append(folder_picker)
             file_picker.on_result = handle_file_pick
             
             print("DEBUG: QR generator view built successfully")
@@ -226,6 +403,30 @@ class QRGeneratorView(BaseView):
                                 ft.Divider(),
                                 status_text,
                                 ft.Container(height=10),
+                                ft.Row(
+                                    [
+                                        ft.ElevatedButton(
+                                            "Download All QR Codes",
+                                            icon=ft.Icons.DOWNLOAD,
+                                            on_click=download_all_qrs,
+                                            style=ft.ButtonStyle(
+                                                bgcolor=PRIMARY_COLOR,
+                                                color=ft.Colors.BLACK
+                                            )
+                                        ),
+                                        ft.ElevatedButton(
+                                            "Save to Database",
+                                            icon=ft.Icons.SAVE,
+                                            on_click=save_students_to_db,
+                                            style=ft.ButtonStyle(
+                                                bgcolor=ft.Colors.BLUE,
+                                                color=ft.Colors.WHITE
+                                            )
+                                        ),
+                                    ],
+                                    spacing=10,
+                                    wrap=True
+                                ),
                                 ft.Text(
                                     "Generated QR Codes",
                                     size=16,

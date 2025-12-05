@@ -1,5 +1,21 @@
 # MaScan — QR Attendance Checker (Developer Documentation)
 
+<h2>To-Do List</h2>
+<ul>
+    <li>Make export to CSV per event.</li>
+    <li>Add "Download All QR" in the Generate QR Codes section.</li>
+    <li>Add time options: Morning, Afternoon.
+        <ul>
+            <li>If food, also add Lunch (clickable).</li>
+        </ul>
+    </li>
+    <li>Fix: Ensure students can only mark attendance <strong>once per session</strong> (e.g., Morning 1, Afternoon 1).</li>
+    <li>Add category of attendance (Food or Attendance).</li>
+    <li>UI improvements.</li>
+</ul>
+
+# MaScan — QR Attendance Checker (Developer Documentation)
+
 This document describes the architecture, key components, data model, runtime flows, and developer guidelines for the MaScan application contained in this workspace.
 
 Table of contents

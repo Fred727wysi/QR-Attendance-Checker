@@ -72,13 +72,13 @@ class LoginView(BaseView):
         
         # Collapsible default credentials info
         show_credentials = ft.Ref[ft.Container]()
-        credentials_visible = [True]  # Using list to maintain state in closure
+        credentials_visible = [False]  # Start collapsed
         
         def toggle_credentials(e):
             credentials_visible[0] = not credentials_visible[0]
             show_credentials.current.visible = credentials_visible[0]
             show_credentials.current.update()
-            e.control.icon = ft.Icons.KEYBOARD_ARROW_UP if credentials_visible[0] else ft.Icons.KEYBOARD_ARROW_DOWN
+            e.control.content.controls[1].icon = ft.Icons.KEYBOARD_ARROW_UP if credentials_visible[0] else ft.Icons.KEYBOARD_ARROW_DOWN
             e.control.update()
         
         credentials_box = ft.Container(
@@ -100,7 +100,7 @@ class LoginView(BaseView):
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             ),
             padding=ft.padding.only(top=8, bottom=4),
-            visible=True,
+            visible=False,  # Start hidden
             animate_opacity=200,
         )
         
@@ -260,7 +260,7 @@ class LoginView(BaseView):
                                             weight=ft.FontWeight.W_500,
                                         ),
                                         ft.Icon(
-                                            ft.Icons.KEYBOARD_ARROW_UP,
+                                            ft.Icons.KEYBOARD_ARROW_DOWN,  # Start with down arrow
                                             size=16,
                                             color=ft.Colors.GREY_500,
                                         ),

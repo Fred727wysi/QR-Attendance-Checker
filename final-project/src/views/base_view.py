@@ -1,11 +1,12 @@
 # views/base_view.py
-"""Base class for all views."""
+"""Base class for all views with modern styling utilities."""
 
 import flet as ft
+from config.constants import PRIMARY_COLOR, BLUE_600
 
 
 class BaseView:
-    """Base class for all views providing common functionality."""
+    """Base class for all views providing common functionality and modern styling."""
     
     def __init__(self, app):
         """Initialize base view with app reference.
@@ -45,3 +46,269 @@ class BaseView:
             ft.AppBar: The constructed app bar
         """
         return self.app.create_app_bar(title, show_back)
+    
+    # Modern UI Component Builders
+    
+    def create_modern_card(self, content, padding=20, expand=False):
+        """Create a modern card with shadow and rounded corners.
+        
+        Args:
+            content: Content to display in card
+            padding: Padding around content
+            expand: Whether card should expand
+            
+        Returns:
+            ft.Container: Styled card container
+        """
+        return ft.Container(
+            content=content,
+            padding=padding,
+            border_radius=16,
+            bgcolor=ft.Colors.WHITE,
+            shadow=ft.BoxShadow(
+                spread_radius=1,
+                blur_radius=15,
+                color=ft.Colors.with_opacity(0.08, ft.Colors.BLACK),
+                offset=ft.Offset(0, 3),
+            ),
+            expand=expand,
+        )
+    
+    def create_modern_button(self, text, icon=None, on_click=None, width=None, 
+                            height=50, is_primary=True, is_danger=False):
+        """Create a modern styled button.
+        
+        Args:
+            text: Button text
+            icon: Optional icon
+            on_click: Click handler
+            width: Button width
+            height: Button height
+            is_primary: Use primary color scheme
+            is_danger: Use danger/red color scheme
+            
+        Returns:
+            ft.ElevatedButton: Styled button
+        """
+        if is_danger:
+            bg_color = ft.Colors.RED_700
+            hover_color = ft.Colors.RED_800
+        elif is_primary:
+            bg_color = PRIMARY_COLOR
+            hover_color = BLUE_600
+        else:
+            bg_color = ft.Colors.GREY_200
+            hover_color = ft.Colors.GREY_300
+        
+        return ft.ElevatedButton(
+            text=text,
+            icon=icon,
+            width=width,
+            height=height,
+            on_click=on_click,
+            style=ft.ButtonStyle(
+                shape=ft.RoundedRectangleBorder(radius=12),
+                bgcolor={
+                    ft.ControlState.DEFAULT: bg_color,
+                    ft.ControlState.HOVERED: hover_color,
+                },
+                color=ft.Colors.WHITE if (is_primary or is_danger) else ft.Colors.BLACK,
+                text_style=ft.TextStyle(
+                    size=15,
+                    weight=ft.FontWeight.W_600,
+                    letter_spacing=0.3,
+                ),
+                elevation=0,
+                overlay_color=ft.Colors.with_opacity(0.1, ft.Colors.WHITE),
+            )
+        )
+    
+    def create_modern_text_field(self, label, hint_text="", prefix_icon=None, 
+                                 password=False, multiline=False, width=None, height=56):
+        """Create a modern styled text field.
+        
+        Args:
+            label: Field label
+            hint_text: Placeholder text
+            prefix_icon: Optional icon
+            password: Whether field is password
+            multiline: Whether field is multiline
+            width: Field width
+            height: Field height
+            
+        Returns:
+            ft.TextField: Styled text field
+        """
+        return ft.TextField(
+            label=label,
+            hint_text=hint_text,
+            prefix_icon=prefix_icon,
+            password=password,
+            can_reveal_password=password,
+            multiline=multiline,
+            min_lines=3 if multiline else 1,
+            max_lines=5 if multiline else 1,
+            width=width,
+            height=None if multiline else height,
+            border_radius=12,
+            filled=True,
+            bgcolor=ft.Colors.GREY_50,
+            border_color=ft.Colors.TRANSPARENT,
+            focused_border_color=PRIMARY_COLOR,
+            focused_bgcolor=ft.Colors.WHITE,
+            content_padding=ft.padding.symmetric(horizontal=16, vertical=16),
+            text_size=15,
+        )
+    
+    def create_section_title(self, text, size=20, icon=None):
+        """Create a section title with optional icon.
+        
+        Args:
+            text: Title text
+            size: Font size
+            icon: Optional icon
+            
+        Returns:
+            ft.Row or ft.Text: Styled title
+        """
+        title = ft.Text(
+            text,
+            size=size,
+            weight=ft.FontWeight.BOLD,
+            color=PRIMARY_COLOR,
+        )
+        
+        if icon:
+            return ft.Row(
+                [
+                    ft.Icon(icon, color=PRIMARY_COLOR, size=size + 4),
+                    title,
+                ],
+                spacing=8,
+                vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            )
+        return title
+    
+    def create_info_badge(self, text, color=ft.Colors.BLUE):
+        """Create a small info badge.
+        
+        Args:
+            text: Badge text
+            color: Badge color
+            
+        Returns:
+            ft.Container: Styled badge
+        """
+        return ft.Container(
+            content=ft.Text(
+                text,
+                color=ft.Colors.WHITE,
+                size=11,
+                weight=ft.FontWeight.W_600,
+            ),
+            bgcolor=color,
+            padding=ft.padding.symmetric(horizontal=12, vertical=6),
+            border_radius=12,
+        )
+    
+    def create_gradient_container(self, content, colors=None, padding=20):
+        """Create container with gradient background.
+        
+        Args:
+            content: Content to display
+            colors: List of gradient colors
+            padding: Container padding
+            
+        Returns:
+            ft.Container: Container with gradient
+        """
+        if colors is None:
+            colors = [
+                ft.Colors.BLUE_50,
+                ft.Colors.PURPLE_50,
+                ft.Colors.PINK_50,
+            ]
+        
+        return ft.Container(
+            content=content,
+            padding=padding,
+            expand=True,
+            gradient=ft.LinearGradient(
+                colors=colors,
+                begin=ft.alignment.top_left,
+                end=ft.alignment.bottom_right,
+                rotation=0.785,
+            ),
+        )
+    
+    def create_empty_state(self, icon, title, subtitle, icon_size=80):
+        """Create an empty state display.
+        
+        Args:
+            icon: Icon to display
+            title: Main text
+            subtitle: Secondary text
+            icon_size: Size of icon
+            
+        Returns:
+            ft.Container: Empty state container
+        """
+        return ft.Container(
+            content=ft.Column(
+                [
+                    ft.Icon(icon, size=icon_size, color=ft.Colors.GREY_300),
+                    ft.Text(
+                        title,
+                        size=20,
+                        weight=ft.FontWeight.W_500,
+                        color=ft.Colors.GREY_600,
+                    ),
+                    ft.Text(
+                        subtitle,
+                        size=14,
+                        color=ft.Colors.GREY_400,
+                    ),
+                ],
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                spacing=12,
+            ),
+            alignment=ft.alignment.center,
+            expand=True,
+        )
+    
+    def create_list_tile_card(self, leading_icon, title, subtitle, trailing=None, 
+                              on_click=None, leading_color=None):
+        """Create a modern list tile in a card.
+        
+        Args:
+            leading_icon: Leading icon
+            title: Title text
+            subtitle: Subtitle text
+            trailing: Trailing widget
+            on_click: Click handler
+            leading_color: Color for leading icon
+            
+        Returns:
+            ft.Card: Styled card with list tile
+        """
+        return ft.Card(
+            content=ft.Container(
+                content=ft.ListTile(
+                    leading=ft.Icon(
+                        leading_icon,
+                        color=leading_color or PRIMARY_COLOR,
+                        size=28,
+                    ),
+                    title=ft.Text(
+                        title,
+                        weight=ft.FontWeight.W_600,
+                        size=15,
+                    ),
+                    subtitle=ft.Text(subtitle, size=13),
+                    trailing=trailing,
+                    on_click=on_click,
+                ),
+                padding=8,
+            ),
+            elevation=1,
+        )

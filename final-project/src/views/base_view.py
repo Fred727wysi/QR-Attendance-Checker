@@ -1,12 +1,12 @@
 # views/base_view.py
-"""Base class for all views with modern styling utilities."""
+"""Base class for all views with premium styling utilities."""
 
 import flet as ft
 from config.constants import PRIMARY_COLOR, BLUE_600
 
 
 class BaseView:
-    """Base class for all views providing common functionality and modern styling."""
+    """Base class for all views providing common functionality and premium styling."""
     
     def __init__(self, app):
         """Initialize base view with app reference.
@@ -47,10 +47,10 @@ class BaseView:
         """
         return self.app.create_app_bar(title, show_back)
     
-    # Modern UI Component Builders
+    # Premium UI Component Builders
     
     def create_modern_card(self, content, padding=20, expand=False):
-        """Create a modern card with shadow and rounded corners.
+        """Create a premium card with enhanced shadows and styling.
         
         Args:
             content: Content to display in card
@@ -63,20 +63,20 @@ class BaseView:
         return ft.Container(
             content=content,
             padding=padding,
-            border_radius=16,
+            border_radius=18,
             bgcolor=ft.Colors.WHITE,
             shadow=ft.BoxShadow(
-                spread_radius=1,
-                blur_radius=15,
+                spread_radius=0,
+                blur_radius=20,
                 color=ft.Colors.with_opacity(0.08, ft.Colors.BLACK),
-                offset=ft.Offset(0, 3),
+                offset=ft.Offset(0, 4),
             ),
             expand=expand,
         )
     
     def create_modern_button(self, text, icon=None, on_click=None, width=None, 
                             height=50, is_primary=True, is_danger=False):
-        """Create a modern styled button.
+        """Create a premium styled button with shadows.
         
         Args:
             text: Button text
@@ -91,14 +91,17 @@ class BaseView:
             ft.ElevatedButton: Styled button
         """
         if is_danger:
-            bg_color = ft.Colors.RED_700
-            hover_color = ft.Colors.RED_800
+            bg_color = ft.Colors.RED_600
+            hover_color = ft.Colors.RED_700
+            shadow_color = ft.Colors.RED_600
         elif is_primary:
             bg_color = PRIMARY_COLOR
             hover_color = BLUE_600
+            shadow_color = PRIMARY_COLOR
         else:
             bg_color = ft.Colors.GREY_200
             hover_color = ft.Colors.GREY_300
+            shadow_color = ft.Colors.GREY_400
         
         return ft.ElevatedButton(
             text=text,
@@ -107,7 +110,7 @@ class BaseView:
             height=height,
             on_click=on_click,
             style=ft.ButtonStyle(
-                shape=ft.RoundedRectangleBorder(radius=12),
+                shape=ft.RoundedRectangleBorder(radius=14),
                 bgcolor={
                     ft.ControlState.DEFAULT: bg_color,
                     ft.ControlState.HOVERED: hover_color,
@@ -115,17 +118,18 @@ class BaseView:
                 color=ft.Colors.WHITE if (is_primary or is_danger) else ft.Colors.BLACK,
                 text_style=ft.TextStyle(
                     size=15,
-                    weight=ft.FontWeight.W_600,
+                    weight=ft.FontWeight.BOLD,
                     letter_spacing=0.3,
                 ),
-                elevation=0,
+                elevation=3,
+                shadow_color=ft.Colors.with_opacity(0.25, shadow_color),
                 overlay_color=ft.Colors.with_opacity(0.1, ft.Colors.WHITE),
             )
         )
     
     def create_modern_text_field(self, label, hint_text="", prefix_icon=None, 
                                  password=False, multiline=False, width=400, height=56):
-        """Create a modern styled text field.
+        """Create a premium styled text field.
         
         Args:
             label: Field label
@@ -137,9 +141,9 @@ class BaseView:
             height: Field height
             
         Returns:
-            ft.Container: Container with centered text field
+            ft.TextField: Styled text field
         """
-        text_field = ft.TextField(
+        return ft.TextField(
             label=label,
             hint_text=hint_text,
             prefix_icon=prefix_icon,
@@ -150,21 +154,22 @@ class BaseView:
             max_lines=5 if multiline else 1,
             width=width,
             height=None if multiline else height,
-            border_radius=12,
+            border_radius=14,
             filled=True,
             bgcolor=ft.Colors.GREY_50,
-            border_color=ft.Colors.TRANSPARENT,
+            border_color=ft.Colors.GREY_200,
             focused_border_color=PRIMARY_COLOR,
             focused_bgcolor=ft.Colors.WHITE,
-            content_padding=ft.padding.symmetric(horizontal=16, vertical=16),
+            content_padding=ft.padding.symmetric(horizontal=18, vertical=16),
             text_size=15,
+            label_style=ft.TextStyle(
+                size=14,
+                weight=ft.FontWeight.W_500,
+            ),
         )
-        
-        # Return the text field directly - let parent handle centering
-        return text_field
     
     def create_section_title(self, text, size=20, icon=None):
-        """Create a section title with optional icon.
+        """Create a premium section title with optional icon.
         
         Args:
             text: Title text
@@ -187,13 +192,13 @@ class BaseView:
                     ft.Icon(icon, color=PRIMARY_COLOR, size=size + 4),
                     title,
                 ],
-                spacing=8,
+                spacing=10,
                 vertical_alignment=ft.CrossAxisAlignment.CENTER,
             )
         return title
     
     def create_info_badge(self, text, color=ft.Colors.BLUE):
-        """Create a small info badge.
+        """Create a premium info badge with shadow.
         
         Args:
             text: Badge text
@@ -207,15 +212,21 @@ class BaseView:
                 text,
                 color=ft.Colors.WHITE,
                 size=11,
-                weight=ft.FontWeight.W_600,
+                weight=ft.FontWeight.BOLD,
             ),
             bgcolor=color,
-            padding=ft.padding.symmetric(horizontal=12, vertical=6),
+            padding=ft.padding.symmetric(horizontal=14, vertical=6),
             border_radius=12,
+            shadow=ft.BoxShadow(
+                spread_radius=0,
+                blur_radius=8,
+                color=ft.Colors.with_opacity(0.3, color),
+                offset=ft.Offset(0, 2),
+            ),
         )
     
     def create_gradient_container(self, content, colors=None, padding=20):
-        """Create container with gradient background.
+        """Create container with premium gradient background.
         
         Args:
             content: Content to display
@@ -245,7 +256,7 @@ class BaseView:
         )
     
     def create_empty_state(self, icon, title, subtitle, icon_size=80):
-        """Create an empty state display.
+        """Create a premium empty state display.
         
         Args:
             icon: Icon to display
@@ -262,18 +273,20 @@ class BaseView:
                     ft.Icon(icon, size=icon_size, color=ft.Colors.GREY_300),
                     ft.Text(
                         title,
-                        size=20,
-                        weight=ft.FontWeight.W_500,
+                        size=22,
+                        weight=ft.FontWeight.BOLD,
                         color=ft.Colors.GREY_600,
                     ),
                     ft.Text(
                         subtitle,
-                        size=14,
-                        color=ft.Colors.GREY_400,
+                        size=15,
+                        color=ft.Colors.GREY_500,
+                        text_align=ft.TextAlign.CENTER,
+                        weight=ft.FontWeight.W_400,
                     ),
                 ],
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                spacing=12,
+                spacing=14,
             ),
             alignment=ft.alignment.center,
             expand=True,
@@ -281,7 +294,7 @@ class BaseView:
     
     def create_list_tile_card(self, leading_icon, title, subtitle, trailing=None, 
                               on_click=None, leading_color=None):
-        """Create a modern list tile in a card.
+        """Create a premium list tile in a card.
         
         Args:
             leading_icon: Leading icon
@@ -304,14 +317,19 @@ class BaseView:
                     ),
                     title=ft.Text(
                         title,
-                        weight=ft.FontWeight.W_600,
-                        size=15,
+                        weight=ft.FontWeight.BOLD,
+                        size=16,
                     ),
-                    subtitle=ft.Text(subtitle, size=13),
+                    subtitle=ft.Text(
+                        subtitle, 
+                        size=14,
+                        color=ft.Colors.GREY_600,
+                    ),
                     trailing=trailing,
                     on_click=on_click,
                 ),
-                padding=8,
+                padding=10,
             ),
-            elevation=1,
+            elevation=2,
+            shadow_color=ft.Colors.with_opacity(0.1, ft.Colors.BLACK),
         )

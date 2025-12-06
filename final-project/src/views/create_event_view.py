@@ -4,6 +4,7 @@
 import flet as ft
 from views.base_view import BaseView
 from config.constants import PRIMARY_COLOR
+from datetime import datetime
 
 
 class CreateEventView(BaseView):
@@ -11,6 +12,9 @@ class CreateEventView(BaseView):
     
     def build(self):
         """Build and return the create event view."""
+        # Store selected date
+        selected_date = [None]
+        
         # Form fields using modern styling
         name_field = self.create_modern_text_field(
             label="Event Name",
@@ -19,11 +23,22 @@ class CreateEventView(BaseView):
             width=400,
         )
         
-        date_field = self.create_modern_text_field(
-            label="Date",
-            hint_text="e.g., December 15, 2024",
+        # Date display field (read-only)
+        date_display = ft.TextField(
+            label="Event Date",
+            hint_text="Click to select date",
             prefix_icon=ft.Icons.CALENDAR_TODAY,
             width=400,
+            height=56,
+            border_radius=12,
+            filled=True,
+            read_only=True,
+            bgcolor=ft.Colors.GREY_50,
+            border_color=ft.Colors.TRANSPARENT,
+            focused_border_color=PRIMARY_COLOR,
+            focused_bgcolor=ft.Colors.WHITE,
+            content_padding=ft.padding.symmetric(horizontal=16, vertical=16),
+            text_size=15,
         )
         
         desc_field = self.create_modern_text_field(
@@ -41,6 +56,57 @@ class CreateEventView(BaseView):
             visible=False,
         )
         
+        def handle_date_change(e):
+            """Handle date selection from date picker."""
+            if e.control.value:
+                selected_date[0] = e.control.value
+                # Format date as "Month Day, Year" (e.g., "December 15, 2024")
+                formatted_date = e.control.value.strftime("%B %d, %Y")
+                date_display.value = formatted_date
+                date_display.update()
+        
+        def handle_date_dismiss(e):
+            """Handle date picker dismissal."""
+            pass
+        
+        # Date picker
+        date_picker = ft.DatePicker(
+            on_change=handle_date_change,
+            on_dismiss=handle_date_dismiss,
+            first_date=datetime(2020, 1, 1),
+            last_date=datetime(2030, 12, 31),
+        )
+        
+        def open_date_picker(e):
+            """Open the date picker dialog."""
+            # Add date picker to page overlay if not already there
+            if date_picker not in self.page.overlay:
+                self.page.overlay.append(date_picker)
+                self.page.update()
+            date_picker.open = True
+            self.page.update()
+        
+        # Container with date field and calendar button - properly centered
+        date_container = ft.Row(
+            [
+                date_display,
+                ft.IconButton(
+                    icon=ft.Icons.CALENDAR_MONTH,
+                    icon_color=PRIMARY_COLOR,
+                    tooltip="Pick a date",
+                    on_click=open_date_picker,
+                    style=ft.ButtonStyle(
+                        bgcolor=ft.Colors.with_opacity(0.1, PRIMARY_COLOR),
+                        shape=ft.RoundedRectangleBorder(radius=12),
+                    ),
+                ),
+            ],
+            spacing=8,
+        )
+        
+        # Make date field clickable
+        date_display.on_click = open_date_picker
+        
         def save_event(e):
             """Save the new event to database."""
             # Clear previous status
@@ -54,8 +120,8 @@ class CreateEventView(BaseView):
                 status_text.update()
                 return
             
-            if not date_field.value or not date_field.value.strip():
-                status_text.value = "Event date is required"
+            if not date_display.value or not date_display.value.strip():
+                status_text.value = "Please select an event date"
                 status_text.color = ft.Colors.RED_600
                 status_text.visible = True
                 status_text.update()
@@ -64,7 +130,7 @@ class CreateEventView(BaseView):
             try:
                 self.db.create_event(
                     name_field.value.strip(),
-                    date_field.value.strip(),
+                    date_display.value.strip(),
                     desc_field.value.strip() if desc_field.value else "No description"
                 )
                 self.show_snackbar(
@@ -104,12 +170,21 @@ class CreateEventView(BaseView):
                     
                     ft.Container(height=24),
                     
-                    # Form fields
+                    # Form fields - all centered
                     ft.Column(
                         [
-                            name_field,
-                            date_field,
-                            desc_field,
+                            ft.Container(
+                                content=name_field,
+                                alignment=ft.alignment.center,
+                            ),
+                            ft.Container(
+                                content=date_container,
+                                alignment=ft.alignment.center,
+                            ),
+                            ft.Container(
+                                content=desc_field,
+                                alignment=ft.alignment.center,
+                            ),
                         ],
                         spacing=16,
                         horizontal_alignment=ft.CrossAxisAlignment.CENTER,

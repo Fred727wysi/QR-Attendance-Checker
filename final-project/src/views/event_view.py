@@ -200,6 +200,20 @@ class EventView(BaseView):
                                         ],
                                         spacing=6,
                                     ),
+                                    # Add separator line
+                                    ft.Container(
+                                        height=1,
+                                        width=300,
+                                        bgcolor=ft.Colors.GREY_300,
+                                        margin=ft.margin.symmetric(vertical=8),
+                                    ),
+                                    # Description
+                                    ft.Text(
+                                        event.get('desc', 'No description'),
+                                        size=14,
+                                        color=ft.Colors.GREY_600,
+                                        italic=event.get('desc', 'No description') == 'No description',
+                                    ),
                                 ],
                                 spacing=4,
                                 expand=True,

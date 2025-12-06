@@ -46,16 +46,23 @@ class LoginView(BaseView):
             text_size=15,
         )
         
-        # Animated error container
+        # Animated error container with better text wrapping
+        error_text = ft.Text(
+            "",
+            size=13,
+            color=ft.Colors.RED_600,
+            weight=ft.FontWeight.W_500,
+            text_align=ft.TextAlign.CENTER,
+            max_lines=2,
+        )
+        
         error_container = ft.Container(
             content=ft.Row(
                 [
                     ft.Icon(ft.Icons.ERROR_OUTLINE, size=16, color=ft.Colors.RED_400),
-                    ft.Text(
-                        "",
-                        size=13,
-                        color=ft.Colors.RED_600,
-                        weight=ft.FontWeight.W_500,
+                    ft.Container(
+                        content=error_text,
+                        expand=True,
                     ),
                 ],
                 spacing=8,
@@ -112,7 +119,7 @@ class LoginView(BaseView):
             
             # Validate inputs
             if not username.value or not password.value:
-                error_container.content.controls[1].value = "Please enter both username and password"
+                error_text.value = "Please enter both username and password"
                 error_container.visible = True
                 error_container.update()
                 return
@@ -134,7 +141,7 @@ class LoginView(BaseView):
                 self.show_snackbar(f"Welcome back, {display_name}! 🎉", ft.Colors.GREEN)
                 self.page.go("/home")
             else:
-                error_container.content.controls[1].value = "Invalid username or password"
+                error_text.value = "Invalid username or password"
                 error_container.visible = True
                 error_container.update()
                 password.value = ""

@@ -124,7 +124,7 @@ class BaseView:
         )
     
     def create_modern_text_field(self, label, hint_text="", prefix_icon=None, 
-                                 password=False, multiline=False, width=None, height=56):
+                                 password=False, multiline=False, width=400, height=56):
         """Create a modern styled text field.
         
         Args:
@@ -133,13 +133,13 @@ class BaseView:
             prefix_icon: Optional icon
             password: Whether field is password
             multiline: Whether field is multiline
-            width: Field width
+            width: Field width (default 400)
             height: Field height
             
         Returns:
-            ft.TextField: Styled text field
+            ft.Container: Container with centered text field
         """
-        return ft.TextField(
+        text_field = ft.TextField(
             label=label,
             hint_text=hint_text,
             prefix_icon=prefix_icon,
@@ -159,6 +159,9 @@ class BaseView:
             content_padding=ft.padding.symmetric(horizontal=16, vertical=16),
             text_size=15,
         )
+        
+        # Return the text field directly - let parent handle centering
+        return text_field
     
     def create_section_title(self, text, size=20, icon=None):
         """Create a section title with optional icon.
